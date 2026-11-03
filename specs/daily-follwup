@@ -1,0 +1,86 @@
+# Feature Specification
+## Seguimiento diario de pacientes
+
+### Problema
+
+El módulo de rescate existente permite identificar pacientes con riesgo de abandonar su tratamiento.
+
+Sin embargo, cuando existen varios pacientes en riesgo, la asistente todavía necesita revisar manualmente cuáles requieren atención y cuáles ya fueron contactados.
+
+La asistente necesita una forma sencilla de organizar su trabajo diario de seguimiento.
+
+### Solución
+
+Crear una vista "Seguimiento de hoy".
+
+La vista mostrará los pacientes identificados con riesgo de abandono y permitirá administrar su seguimiento desde una sola pantalla.
+
+Cada paciente mostrará:
+
+- Nombre
+- Tratamiento
+- Días desde la última sesión
+- Prioridad
+- Estado del seguimiento
+- Acción de contacto por WhatsApp
+
+Los posibles estados de seguimiento son:
+
+- Pendiente
+- Contactado
+- Resuelto
+
+Los cambios de estado deberán reflejarse inmediatamente en la interfaz.
+
+## Criterios de aceptación
+
+### AC1 - Lista de seguimiento
+
+Dado un paciente identificado con riesgo de abandono, cuando la asistente abra "Seguimiento de hoy", el paciente debe aparecer en la lista de seguimiento.
+
+### AC2 - Información operativa
+
+Cada paciente deberá mostrar:
+
+- Nombre
+- Tratamiento
+- Días desde última sesión
+- Prioridad
+- Estado
+- Acción de contacto
+
+### AC3 - Registro de contacto
+
+Cuando un paciente sea marcado como "Contactado", su estado deberá cambiar de "Pendiente" a "Contactado" y el cambio deberá mostrarse visualmente.
+
+### AC4 - WhatsApp
+
+Cada paciente pendiente deberá disponer de una acción de WhatsApp que prepare un mensaje de seguimiento para el paciente.
+
+### AC5 - Resolución
+
+La asistente deberá poder marcar un seguimiento como "Resuelto".
+
+Los casos resueltos deberán diferenciarse visualmente de los pendientes.
+
+## Métricas de éxito
+
+### Tasa de seguimiento
+
+Pacientes contactados / pacientes identificados para seguimiento
+
+Objetivo inicial:
+80% o más de los pacientes identificados deben recibir seguimiento.
+
+### Tiempo hasta contacto
+
+Tiempo entre la identificación del paciente en riesgo y el registro del primer contacto.
+
+Objetivo inicial:
+realizar el primer seguimiento dentro de las primeras 24 horas desde su identificación.
+
+### Tasa de recuperación
+
+Pacientes que agendan una nueva cita después del contacto / pacientes contactados.
+
+Esta métrica permitirá evaluar si el seguimiento contribuye a recuperar pacientes que podrían abandonar su tratamiento.
