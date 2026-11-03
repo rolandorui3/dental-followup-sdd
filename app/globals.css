@@ -23,3 +23,27 @@ button { cursor: pointer; }
 @media (max-width: 1050px) { .sidebar { width: 215px; flex-basis: 215px; }.page-content { padding-left: 28px; padding-right: 28px; }.patient-table th, .patient-table td { padding-left: 10px; padding-right: 10px; }.patient-table th:first-child, .patient-table td:first-child { padding-left: 15px; }.patient-table th:last-child, .patient-table td:last-child { padding-right: 15px; } }
 @media (max-width: 800px) { .sidebar { display: none; }.topbar { height: 62px; padding: 0 20px; justify-content: space-between; }.mobile-brand { display: flex; align-items: center; gap: 8px; color: #173c41; font-size: 14px; }.mobile-brand .brand-mark { width: 28px; height: 28px; }.user-chip span, .topbar-divider { display: none; }.page-content { padding: 28px 18px; }.page-heading { align-items: flex-start; gap: 20px; flex-direction: column; }.date-button { align-self: flex-start; }.metrics-grid { grid-template-columns: repeat(2, 1fr); }.toolbar { gap: 12px; flex-direction: column; align-items: stretch; }.search-box { width: 100%; }.filter-tabs { overflow-x: auto; }.patient-table-wrap { overflow-x: auto; }.patient-table { min-width: 780px; }.section-heading { padding-left: 18px; padding-right: 18px; }.filter-button { display: none; }.table-footer { padding-left: 18px; padding-right: 18px; }.footer-note { display: none; } }
 @media (max-width: 430px) { .metrics-grid { grid-template-columns: 1fr; }.page-heading h1 { font-size: 24px; }.section-heading { align-items: flex-start; }.section-heading h2 { font-size: 14px; }.section-heading p { line-height: 1.5; }.page-footer { font-size: 8px; } }
+
+/* Daily-workflow hierarchy */
+.page-content { padding-top: 42px; }
+.page-heading { margin-bottom: 24px; }
+.eyebrow-context { color: #a8b6b8; }
+.title-row { display: flex; align-items: center; gap: 14px; }
+.title-row h1 { margin-bottom: 5px; }
+.focus-pill { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); background: #e8f7f4; border: 1px solid #d5efeb; border-radius: 999px; padding: 6px 9px; font-size: 9px; font-weight: 700; white-space: nowrap; margin-top: -18px; }
+.metrics-grid { gap: 12px; margin-bottom: 22px; }
+.metric-card { padding: 13px 14px; box-shadow: none; }
+.metric-card:nth-child(2) { border-color: #f4d7ce; background: #fffaf8; }
+.metric-card:nth-child(2) .metric-copy strong { color: #b85f4b; }
+.followup-section { border-color: #dbe9e8; box-shadow: 0 8px 24px rgba(24, 63, 68, .05); }
+.section-heading { padding: 24px 24px 16px; }
+.section-heading h2 { font-size: 16px; }
+.section-heading h2::after { content: '  ·  primero lo urgente'; color: #c87962; font-size: 10px; font-weight: 600; letter-spacing: 0; }
+.toolbar { background: #fcfefe; padding-top: 10px; padding-bottom: 10px; }
+.patient-table th { background: #f7fbfa; }
+.priority-row td { background: #fffaf8; border-top-color: #f6e1db; }
+.priority-row td:first-child { box-shadow: inset 3px 0 0 #e57b61; }
+.priority-row .patient-cell strong { color: #8f4d40; }
+.priority-row .whatsapp-button { background: #0d837d; box-shadow: 0 3px 8px rgba(13, 131, 125, .18); }
+.table-footer { background: #fcfefe; }
+@media (max-width: 800px) { .title-row { align-items: flex-start; flex-direction: column; gap: 8px; }.focus-pill { margin-top: 0; }.page-content { padding-top: 28px; } }
