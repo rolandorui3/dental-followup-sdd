@@ -1,138 +1,57 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import {
-  Bell,
-  CalendarDays,
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  Clock3,
-  Filter,
-  HeartPulse,
-  LayoutDashboard,
-  MessageCircle,
-  MoreHorizontal,
-  Search,
-  Settings,
-  ShieldCheck,
-  Stethoscope,
-  UserRound,
-  Users,
-  X,
-} from 'lucide-react'
+import { Bell, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Filter, HeartPulse, LayoutDashboard, MessageCircle, MoreHorizontal, Search, Settings, ShieldCheck, Stethoscope, Users, X, BarChart3, ChevronLeft, ChevronRight, Phone, MapPin, Save } from 'lucide-react'
 
 type Status = 'Pendiente' | 'Contactado' | 'Resuelto'
 type Priority = 'Alta' | 'Media' | 'Baja'
+type AppointmentStatus = 'Programada' | 'Confirmada' | 'Asistió' | 'No asistió' | 'Cancelada'
+type View = 'seguimiento' | 'agenda' | 'pacientes' | 'reportes' | 'configuracion'
 
-type Patient = {
-  id: number
-  name: string
-  initials: string
-  treatment: string
-  days: number
-  priority: Priority
-  status: Status
-  phone: string
-  color: string
-}
+type Patient = { id: number; name: string; initials: string; treatment: string; days: number; priority: Priority; status: Status; phone: string; color: string; lastVisit: string; nextAppointment: string; progress: number }
+type Appointment = { id: number; date: string; time: string; patientId: number; treatment: string; status: AppointmentStatus }
 
 const initialPatients: Patient[] = [
-  { id: 1, name: 'Laura Martínez', initials: 'LM', treatment: 'Implante dental', days: 18, priority: 'Alta', status: 'Pendiente', phone: '555 010 2401', color: 'coral' },
-  { id: 2, name: 'Carlos Ramírez', initials: 'CR', treatment: 'Ortodoncia', days: 12, priority: 'Alta', status: 'Pendiente', phone: '555 010 2402', color: 'blue' },
-  { id: 3, name: 'Sofía Torres', initials: 'ST', treatment: 'Endodoncia', days: 9, priority: 'Media', status: 'Contactado', phone: '555 010 2403', color: 'purple' },
-  { id: 4, name: 'Diego Herrera', initials: 'DH', treatment: 'Limpieza profunda', days: 7, priority: 'Media', status: 'Pendiente', phone: '555 010 2404', color: 'green' },
-  { id: 5, name: 'Ana López', initials: 'AL', treatment: 'Carillas dentales', days: 5, priority: 'Baja', status: 'Resuelto', phone: '555 010 2405', color: 'amber' },
-  { id: 6, name: 'Miguel Santos', initials: 'MS', treatment: 'Corona dental', days: 4, priority: 'Media', status: 'Contactado', phone: '555 010 2406', color: 'slate' },
+  { id: 1, name: 'Laura Martínez', initials: 'LM', treatment: 'Implante dental', days: 18, priority: 'Alta', status: 'Pendiente', phone: '555 010 2401', color: 'coral', lastVisit: '31 mayo 2024', nextAppointment: 'Por confirmar', progress: 62 },
+  { id: 2, name: 'Carlos Ramírez', initials: 'CR', treatment: 'Ortodoncia', days: 12, priority: 'Alta', status: 'Pendiente', phone: '555 010 2402', color: 'blue', lastVisit: '6 junio 2024', nextAppointment: '21 junio 2024', progress: 44 },
+  { id: 3, name: 'Sofía Torres', initials: 'ST', treatment: 'Endodoncia', days: 9, priority: 'Media', status: 'Contactado', phone: '555 010 2403', color: 'purple', lastVisit: '9 junio 2024', nextAppointment: '24 junio 2024', progress: 78 },
+  { id: 4, name: 'Diego Herrera', initials: 'DH', treatment: 'Limpieza profunda', days: 7, priority: 'Media', status: 'Pendiente', phone: '555 010 2404', color: 'green', lastVisit: '11 junio 2024', nextAppointment: '26 junio 2024', progress: 35 },
+  { id: 5, name: 'Ana López', initials: 'AL', treatment: 'Carillas dentales', days: 5, priority: 'Baja', status: 'Resuelto', phone: '555 010 2405', color: 'amber', lastVisit: '13 junio 2024', nextAppointment: '4 julio 2024', progress: 91 },
+  { id: 6, name: 'Miguel Santos', initials: 'MS', treatment: 'Corona dental', days: 4, priority: 'Media', status: 'Contactado', phone: '555 010 2406', color: 'slate', lastVisit: '14 junio 2024', nextAppointment: '28 junio 2024', progress: 53 },
 ]
+const initialAppointments: Appointment[] = [
+  { id: 1, date: '18 junio 2024', time: '09:00', patientId: 1, treatment: 'Implante dental', status: 'Programada' },
+  { id: 2, date: '18 junio 2024', time: '10:30', patientId: 2, treatment: 'Ajuste de ortodoncia', status: 'Confirmada' },
+  { id: 3, date: '18 junio 2024', time: '12:00', patientId: 3, treatment: 'Revisión de endodoncia', status: 'Programada' },
+  { id: 4, date: '18 junio 2024', time: '16:00', patientId: 4, treatment: 'Limpieza profunda', status: 'Asistió' },
+  { id: 5, date: '19 junio 2024', time: '09:30', patientId: 5, treatment: 'Prueba de carillas', status: 'Confirmada' },
+  { id: 6, date: '19 junio 2024', time: '11:00', patientId: 6, treatment: 'Toma de impresión', status: 'Programada' },
+]
+const appointmentStatuses: AppointmentStatus[] = ['Programada', 'Confirmada', 'Asistió', 'No asistió', 'Cancelada']
+const followupStatuses: Status[] = ['Pendiente', 'Contactado', 'Resuelto']
 
-const statusOptions: Status[] = ['Pendiente', 'Contactado', 'Resuelto']
-
-function Avatar({ patient }: { patient: Patient }) {
-  return <div className={`avatar avatar-${patient.color}`} aria-hidden="true">{patient.initials}</div>
-}
-
-function StatusBadge({ status }: { status: Status }) {
-  const icon = status === 'Resuelto' ? <CheckCircle2 size={13} /> : status === 'Contactado' ? <MessageCircle size={13} /> : <Clock3 size={13} />
-  return <span className={`status-badge status-${status.toLowerCase()}`}>{icon}{status}</span>
-}
-
-function PriorityBadge({ priority }: { priority: Priority }) {
-  return <span className={`priority-badge priority-${priority.toLowerCase()}`}><span className="priority-dot" />{priority}</span>
-}
-
-function MetricCard({ icon, label, value, helper, tone }: { icon: React.ReactNode; label: string; value: number; helper: string; tone: string }) {
-  return <div className="metric-card">
-    <div className={`metric-icon ${tone}`}>{icon}</div>
-    <div className="metric-copy"><span>{label}</span><strong>{value}</strong><small>{helper}</small></div>
-  </div>
-}
+function Avatar({ patient }: { patient: Patient }) { return <div className={`avatar avatar-${patient.color}`} aria-hidden="true">{patient.initials}</div> }
+function StatusBadge({ status }: { status: Status }) { const icon = status === 'Resuelto' ? <CheckCircle2 size={13} /> : status === 'Contactado' ? <MessageCircle size={13} /> : <Clock3 size={13} />; return <span className={`status-badge status-${status.toLowerCase()}`}>{icon}{status}</span> }
+function PriorityBadge({ priority }: { priority: Priority }) { return <span className={`priority-badge priority-${priority.toLowerCase()}`}><span className="priority-dot" />{priority}</span> }
+function MetricCard({ icon, label, value, helper, tone }: { icon: React.ReactNode; label: string; value: number | string; helper: string; tone: string }) { return <div className="metric-card"><div className={`metric-icon ${tone}`}>{icon}</div><div className="metric-copy"><span>{label}</span><strong>{value}</strong><small>{helper}</small></div></div> }
+function SelectControl({ value, options, onChange, label }: { value: string; options: string[]; onChange: (value: string) => void; label: string }) { return <label className="status-select"><select aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select><ChevronDown size={13} /></label> }
 
 export default function Page() {
-  const [patients, setPatients] = useState(initialPatients)
-  const [filter, setFilter] = useState<'Todos' | Status>('Todos')
-  const [search, setSearch] = useState('')
-  const [showNotifications, setShowNotifications] = useState(false)
-
-  const metrics = useMemo(() => ({
-    attention: patients.filter((patient) => patient.status !== 'Resuelto').length,
-    high: patients.filter((patient) => patient.priority === 'Alta' && patient.status !== 'Resuelto').length,
-    pending: patients.filter((patient) => patient.status === 'Pendiente').length,
-    contacted: patients.filter((patient) => patient.status === 'Contactado').length,
-  }), [patients])
-
-  const visiblePatients = patients.filter((patient) => {
-    const matchesFilter = filter === 'Todos' || patient.status === filter
-    const query = search.toLowerCase()
-    return matchesFilter && `${patient.name} ${patient.treatment}`.toLowerCase().includes(query)
-  })
-
-  function updateStatus(id: number, status: Status) {
-    setPatients((current) => current.map((patient) => patient.id === id ? { ...patient, status } : patient))
-  }
-
-  function openWhatsApp(patient: Patient) {
-    const message = `Hola ${patient.name.split(' ')[0]}, te escribimos de Sonrisa Clínica Dental para dar seguimiento a tu tratamiento de ${patient.treatment.toLowerCase()}. ¿Te gustaría agendar tu próxima cita?`
-    window.open(`https://wa.me/155501024${patient.id}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
-    updateStatus(patient.id, 'Contactado')
-  }
-
-  return <main className="app-shell">
-    <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><Stethoscope size={21} strokeWidth={2.5} /></div><div><strong>Sonrisa</strong><span>Clínica Dental</span></div></div>
-      <div className="clinic-switcher"><div className="clinic-avatar">SC</div><div><strong>Clínica Centro</strong><span>Panel de trabajo</span></div><ChevronDown size={15} /></div>
-      <nav className="main-nav" aria-label="Navegación principal">
-        <p className="nav-label">PRINCIPAL</p>
-        <a className="nav-link active" href="#seguimiento"><LayoutDashboard size={18} />Seguimiento de hoy<span className="nav-count">{metrics.attention}</span></a>
-        <a className="nav-link" href="#agenda"><CalendarDays size={18} />Agenda</a>
-        <a className="nav-link" href="#pacientes"><Users size={18} />Pacientes</a>
-        <p className="nav-label nav-label-space">GESTIÓN</p>
-        <a className="nav-link" href="#reportes"><HeartPulse size={18} />Reportes</a>
-        <a className="nav-link" href="#configuracion"><Settings size={18} />Configuración</a>
-      </nav>
-      <div className="sidebar-footer"><div className="help-card"><div className="help-icon"><ShieldCheck size={18} /></div><div><strong>Todo bajo control</strong><span>Tu seguimiento está al día</span></div></div><div className="profile"><div className="profile-avatar">MC</div><div><strong>Mariana Cruz</strong><span>Asistente dental</span></div><MoreHorizontal size={18} /></div></div>
-    </aside>
-
-    <section className="content-area">
-      <header className="topbar"><div className="mobile-brand"><div className="brand-mark"><Stethoscope size={18} /></div><strong>Sonrisa</strong></div><div className="topbar-actions"><button className="icon-button notification-button" aria-label="Ver notificaciones" onClick={() => setShowNotifications(!showNotifications)}><Bell size={19} /><span className="notification-dot" /></button><div className="topbar-divider" /><div className="user-chip"><div className="profile-avatar small">MC</div><span>Mariana Cruz</span><ChevronDown size={15} /></div></div>{showNotifications && <div className="notification-popover"><strong>Notificaciones</strong><p>3 pacientes requieren atención hoy.</p><button onClick={() => setShowNotifications(false)}><X size={13} />Cerrar</button></div>}</header>
-      <div className="page-content" id="seguimiento">
-        <div className="page-heading"><div><div className="eyebrow"><span className="live-dot" />Martes, 18 de junio de 2024 <span className="eyebrow-context">· Tu lista de trabajo</span></div><div className="title-row"><div><h1>Seguimiento de hoy</h1><p>Hola Mariana, aquí tienes lo que necesita tu atención.</p></div><span className="focus-pill"><HeartPulse size={14} />Enfoque del día</span></div></div><button className="date-button"><CalendarDays size={17} />Hoy <ChevronDown size={14} /></button></div>
-
-        <section className="metrics-grid" aria-label="Resumen de seguimiento">
-          <MetricCard icon={<Users size={18} />} label="Requieren atención" value={metrics.attention} helper="de 6 pacientes activos" tone="teal" />
-          <MetricCard icon={<span className="alert-symbol">!</span>} label="Alta prioridad" value={metrics.high} helper="requieren acción inmediata" tone="red" />
-          <MetricCard icon={<Clock3 size={18} />} label="Seguimientos pendientes" value={metrics.pending} helper="sin contacto registrado" tone="amber" />
-          <MetricCard icon={<CheckCircle2 size={18} />} label="Pacientes contactados" value={metrics.contacted} helper="en seguimiento activo" tone="green" />
-        </section>
-
-        <section className="followup-section" aria-labelledby="followup-title">
-          <div className="section-heading"><div><h2 id="followup-title">Pacientes que requieren seguimiento</h2><p>Prioriza las conversaciones según el tiempo desde su última sesión.</p></div><button className="filter-button"><Filter size={16} />Filtrar<ChevronDown size={14} /></button></div>
-          <div className="toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar paciente o tratamiento..." aria-label="Buscar paciente o tratamiento" /></div><div className="filter-tabs" role="group" aria-label="Filtrar por estado">{(['Todos', ...statusOptions] as const).map((item) => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}{item !== 'Todos' && <span>{patients.filter((patient) => patient.status === item).length}</span>}</button>)}</div></div>
-          <div className="patient-table-wrap"><table className="patient-table"><thead><tr><th>Paciente</th><th>Tratamiento</th><th>Última sesión</th><th>Prioridad</th><th>Estado</th><th className="action-heading">Acción</th></tr></thead><tbody>{visiblePatients.map((patient) => <tr key={patient.id} className={patient.priority === 'Alta' && patient.status !== 'Resuelto' ? 'priority-row' : ''}><td><div className="patient-cell"><Avatar patient={patient} /><div><strong>{patient.name}</strong><span>Paciente #{String(patient.id).padStart(4, '0')}</span></div></div></td><td><span className="treatment-name">{patient.treatment}</span><span className="treatment-sub">Plan en curso</span></td><td><strong className={patient.days >= 14 ? 'days-risk' : ''}>{patient.days} días</strong><span className="treatment-sub">desde su última visita</span></td><td><PriorityBadge priority={patient.priority} /></td><td><label className="status-select"><select aria-label={`Cambiar estado de ${patient.name}`} value={patient.status} onChange={(event) => updateStatus(patient.id, event.target.value as Status)}>{statusOptions.map((status) => <option key={status}>{status}</option>)}</select><ChevronDown size={13} /></label></td><td className="action-cell">{patient.status !== 'Resuelto' ? <button className="whatsapp-button" onClick={() => openWhatsApp(patient)}><MessageCircle size={16} />WhatsApp</button> : <span className="resolved-action"><Check size={15} />Completado</span>}</td></tr>)}</tbody></table>{visiblePatients.length === 0 && <div className="empty-state"><Search size={25} /><strong>No encontramos pacientes</strong><span>Prueba con otro nombre o estado.</span></div>}</div>
-          <div className="table-footer"><span>Mostrando <strong>{visiblePatients.length}</strong> de <strong>{patients.length}</strong> pacientes</span><span className="footer-note"><CheckCircle2 size={14} /> Datos actualizados hace unos segundos</span></div>
-        </section>
-        <footer className="page-footer"><span>© 2024 Sonrisa Clínica Dental</span><span>Ayuda y soporte</span></footer>
-      </div>
-    </section>
-  </main>
+  const [view, setView] = useState<View>('seguimiento'); const [patients, setPatients] = useState(initialPatients); const [appointments, setAppointments] = useState(initialAppointments); const [filter, setFilter] = useState<'Todos' | Status>('Todos'); const [search, setSearch] = useState(''); const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null); const [agendaDate, setAgendaDate] = useState('18 junio 2024'); const [showNotifications, setShowNotifications] = useState(false); const [saved, setSaved] = useState(false); const [settings, setSettings] = useState({ days: '15', reminder: 'Hola, te recordamos tu cita en Sonrisa Clínica Dental. ¿Nos confirmas tu asistencia?', followup: 'Hola, ¿cómo te has sentido después de tu tratamiento? Estamos aquí para ayudarte.', clinic: 'Clínica Centro' })
+  const metrics = useMemo(() => ({ attention: patients.filter(p => p.status !== 'Resuelto').length, high: patients.filter(p => p.priority === 'Alta' && p.status !== 'Resuelto').length, pending: patients.filter(p => p.status === 'Pendiente').length, contacted: patients.filter(p => p.status === 'Contactado').length }), [patients])
+  const visiblePatients = patients.filter(p => { const matchesFilter = filter === 'Todos' || p.status === filter; return matchesFilter && `${p.name} ${p.treatment}`.toLowerCase().includes(search.toLowerCase()) })
+  const agendaAppointments = appointments.filter(a => a.date === agendaDate)
+  const patientById = (id: number) => patients.find(p => p.id === id)!
+  function updateStatus(id: number, status: Status) { setPatients(current => current.map(p => p.id === id ? { ...p, status } : p)) }
+  function updateAppointment(id: number, status: AppointmentStatus) { setAppointments(current => current.map(a => a.id === id ? { ...a, status } : a)) }
+  function openWhatsApp(patient: Patient) { window.open(`https://wa.me/155501024${patient.id}?text=${encodeURIComponent(`Hola ${patient.name.split(' ')[0]}, te escribimos de Sonrisa Clínica Dental para dar seguimiento a tu tratamiento de ${patient.treatment.toLowerCase()}. ¿Te gustaría agendar tu próxima cita?`)}`, '_blank', 'noopener,noreferrer'); updateStatus(patient.id, 'Contactado') }
+  const nav = [{ id: 'seguimiento' as View, label: 'Seguimiento de hoy', icon: LayoutDashboard }, { id: 'agenda' as View, label: 'Agenda', icon: CalendarDays }, { id: 'pacientes' as View, label: 'Pacientes', icon: Users }, { id: 'reportes' as View, label: 'Reportes', icon: HeartPulse }, { id: 'configuracion' as View, label: 'Configuración', icon: Settings }]
+  return <main className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark"><Stethoscope size={21} strokeWidth={2.5} /></div><div><strong>Sonrisa</strong><span>Clínica Dental</span></div></div><div className="clinic-switcher"><div className="clinic-avatar">SC</div><div><strong>{settings.clinic}</strong><span>Panel de trabajo</span></div><ChevronDown size={15} /></div><nav className="main-nav" aria-label="Navegación principal"><p className="nav-label">PRINCIPAL</p>{nav.slice(0, 3).map(item => { const Icon = item.icon; return <button key={item.id} className={`nav-link ${view === item.id ? 'active' : ''}`} onClick={() => { setView(item.id); setSelectedPatient(null) }}><Icon size={18} />{item.label}{item.id === 'seguimiento' && <span className="nav-count">{metrics.attention}</span>}</button> })}<p className="nav-label nav-label-space">GESTIÓN</p>{nav.slice(3).map(item => { const Icon = item.icon; return <button key={item.id} className={`nav-link ${view === item.id ? 'active' : ''}`} onClick={() => setView(item.id)}><Icon size={18} />{item.label}</button> })}</nav><div className="sidebar-footer"><div className="help-card"><div className="help-icon"><ShieldCheck size={18} /></div><div><strong>Todo bajo control</strong><span>Tu seguimiento está al día</span></div></div><div className="profile"><div className="profile-avatar">MC</div><div><strong>Mariana Cruz</strong><span>Asistente dental</span></div><MoreHorizontal size={18} /></div></div></aside><section className="content-area"><header className="topbar"><div className="mobile-brand"><div className="brand-mark"><Stethoscope size={18} /></div><strong>Sonrisa</strong></div><div className="topbar-actions"><button className="icon-button notification-button" aria-label="Ver notificaciones" onClick={() => setShowNotifications(!showNotifications)}><Bell size={19} /><span className="notification-dot" /></button><div className="topbar-divider" /><div className="user-chip"><div className="profile-avatar small">MC</div><span>Mariana Cruz</span><ChevronDown size={15} /></div></div>{showNotifications && <div className="notification-popover"><strong>Notificaciones</strong><p>{metrics.high} pacientes requieren atención hoy.</p><button onClick={() => setShowNotifications(false)}><X size={13} />Cerrar</button></div>}</header><div className="page-content">{view === 'seguimiento' && <FollowupView patients={patients} visiblePatients={visiblePatients} metrics={metrics} filter={filter} setFilter={setFilter} search={search} setSearch={setSearch} updateStatus={updateStatus} openWhatsApp={openWhatsApp} />}{view === 'agenda' && <AgendaView date={agendaDate} setDate={setAgendaDate} appointments={agendaAppointments} patientById={patientById} updateAppointment={updateAppointment} />}{view === 'pacientes' && <PatientsView patients={patients} search={search} setSearch={setSearch} selectedPatient={selectedPatient} setSelectedPatient={setSelectedPatient} />}{view === 'reportes' && <ReportsView patients={patients} appointments={appointments} />}{view === 'configuracion' && <SettingsView settings={settings} setSettings={setSettings} saved={saved} setSaved={setSaved} />}</div></section></main>
 }
+
+function ViewHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) { return <div className="page-heading"><div><div className="eyebrow"><span className="live-dot" />{eyebrow}</div><h1>{title}</h1><p>{description}</p></div>{action}</div> }
+function FollowupView({ patients, visiblePatients, metrics, filter, setFilter, search, setSearch, updateStatus, openWhatsApp }: any) { return <><ViewHeading eyebrow="Martes, 18 de junio de 2024 · Tu lista de trabajo" title="Seguimiento de hoy" description="Hola Mariana, aquí tienes lo que necesita tu atención." action={<span className="focus-pill"><HeartPulse size={14} />Enfoque del día</span>} /><section className="metrics-grid" aria-label="Resumen de seguimiento"><MetricCard icon={<Users size={18} />} label="Requieren atención" value={metrics.attention} helper="de 6 pacientes activos" tone="teal" /><MetricCard icon={<span className="alert-symbol">!</span>} label="Alta prioridad" value={metrics.high} helper="requieren acción inmediata" tone="red" /><MetricCard icon={<Clock3 size={18} />} label="Seguimientos pendientes" value={metrics.pending} helper="sin contacto registrado" tone="amber" /><MetricCard icon={<CheckCircle2 size={18} />} label="Pacientes contactados" value={metrics.contacted} helper="en seguimiento activo" tone="green" /></section><section className="followup-section"><div className="section-heading"><div><h2>Pacientes que requieren seguimiento</h2><p>Prioriza las conversaciones según el tiempo desde su última sesión.</p></div><button className="filter-button"><Filter size={16} />Filtrar<ChevronDown size={14} /></button></div><div className="toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar paciente o tratamiento..." aria-label="Buscar paciente o tratamiento" /></div><div className="filter-tabs" role="group" aria-label="Filtrar por estado">{(['Todos', 'Pendiente', 'Contactado', 'Resuelto'] as const).map(item => <button key={item} className={filter === item ? 'selected' : ''} onClick={() => setFilter(item)}>{item}{item !== 'Todos' && <span>{patients.filter((p: Patient) => p.status === item).length}</span>}</button>)}</div></div><div className="patient-table-wrap"><table className="patient-table"><thead><tr><th>Paciente</th><th>Tratamiento</th><th>Última sesión</th><th>Prioridad</th><th>Estado</th><th>Acción</th></tr></thead><tbody>{visiblePatients.map((patient: Patient) => <tr key={patient.id} className={patient.priority === 'Alta' && patient.status !== 'Resuelto' ? 'priority-row' : ''}><td><div className="patient-cell"><Avatar patient={patient} /><div><strong>{patient.name}</strong><span>Paciente #{String(patient.id).padStart(4, '0')}</span></div></div></td><td><span className="treatment-name">{patient.treatment}</span><span className="treatment-sub">Plan en curso</span></td><td><strong className={patient.days >= 14 ? 'days-risk' : ''}>{patient.days} días</strong><span className="treatment-sub">desde su última visita</span></td><td><PriorityBadge priority={patient.priority} /></td><td><SelectControl label={`Cambiar estado de ${patient.name}`} value={patient.status} options={followupStatuses} onChange={(value) => updateStatus(patient.id, value)} /></td><td className="action-cell">{patient.status !== 'Resuelto' ? <button className="whatsapp-button" onClick={() => openWhatsApp(patient)}><MessageCircle size={16} />WhatsApp</button> : <span className="resolved-action"><Check size={15} />Completado</span>}</td></tr>)}</tbody></table>{visiblePatients.length === 0 && <div className="empty-state"><Search size={25} /><strong>No encontramos pacientes</strong><span>Prueba con otro nombre o estado.</span></div>}</div><div className="table-footer"><span>Mostrando <strong>{visiblePatients.length}</strong> de <strong>{patients.length}</strong> pacientes</span><span className="footer-note"><CheckCircle2 size={14} /> Datos actualizados hace unos segundos</span></div></section></> }
+function AgendaView({ date, setDate, appointments, patientById, updateAppointment }: any) { const dates = ['18 junio 2024', '19 junio 2024']; const index = dates.indexOf(date); return <><ViewHeading eyebrow="Agenda diaria" title="Agenda" description="Organiza las citas y confirma la llegada de tus pacientes." action={<button className="date-button" onClick={() => setDate('18 junio 2024')}><CalendarDays size={17} />Hoy</button>} /><section className="workspace-card"><div className="agenda-toolbar"><button className="icon-button" aria-label="Día anterior" onClick={() => setDate(dates[Math.max(0, index - 1)])}><ChevronLeft size={18} /></button><div><strong>{date}</strong><span>{appointments.length} citas programadas</span></div><button className="icon-button" aria-label="Día siguiente" onClick={() => setDate(dates[Math.min(dates.length - 1, index + 1)])}><ChevronRight size={18} /></button></div><div className="appointment-list">{appointments.map((appointment: Appointment) => { const patient = patientById(appointment.patientId); return <div className="appointment-row" key={appointment.id}><div className="appointment-time"><strong>{appointment.time}</strong><span>30 min</span></div><div className="appointment-person"><Avatar patient={patient} /><div><strong>{patient.name}</strong><span>{appointment.treatment}</span></div></div><div className={`appointment-status status-${appointment.status.toLowerCase().replace(' ', '-')}`}><SelectControl label={`Estado de cita de ${patient.name}`} value={appointment.status} options={appointmentStatuses} onChange={(value) => updateAppointment(appointment.id, value)} /></div><div className="appointment-flag">{appointment.status === 'Programada' && <><Clock3 size={14} /> Requiere confirmación</>}</div></div> })}</div></section></> }
+function PatientsView({ patients, search, setSearch, selectedPatient, setSelectedPatient }: any) { const filtered = patients.filter((p: Patient) => p.name.toLowerCase().includes(search.toLowerCase())); if (selectedPatient) return <><button className="back-link" onClick={() => setSelectedPatient(null)}><ChevronLeft size={16} />Volver al directorio</button><ViewHeading eyebrow="Directorio de pacientes" title={selectedPatient.name} description="Resumen operativo del tratamiento y seguimiento." action={<PriorityBadge priority={selectedPatient.priority} />} /><div className="detail-grid"><section className="workspace-card detail-card"><div className="detail-profile"><Avatar patient={selectedPatient} /><div><h2>{selectedPatient.name}</h2><span>Paciente #{String(selectedPatient.id).padStart(4, '0')}</span></div></div><div className="contact-lines"><span><Phone size={15} />{selectedPatient.phone}</span><span><MapPin size={15} />Clínica Centro</span></div><div className="detail-block"><label>Tratamiento actual</label><strong>{selectedPatient.treatment}</strong><div className="progress-track"><span style={{ width: `${selectedPatient.progress}%` }} /></div><small>{selectedPatient.progress}% de avance del tratamiento</small></div></section><section className="workspace-card detail-card"><h2>Seguimiento</h2><div className="detail-status"><StatusBadge status={selectedPatient.status} /><span>Última visita: {selectedPatient.lastVisit}</span></div><h3>Historial reciente</h3><div className="history-item"><CalendarDays size={16} /><div><strong>{selectedPatient.lastVisit}</strong><span>{selectedPatient.treatment} · Sesión registrada</span></div></div><div className="history-item"><CalendarDays size={16} /><div><strong>{selectedPatient.nextAppointment}</strong><span>Próxima cita</span></div></div></section></div></>; return <><ViewHeading eyebrow="Directorio operativo" title="Pacientes" description="Consulta rápidamente el estado de cada tratamiento." /><section className="workspace-card"><div className="directory-toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." aria-label="Buscar paciente por nombre" /></div><span>{filtered.length} pacientes</span></div><div className="patient-directory"><div className="directory-head"><span>Paciente</span><span>Tratamiento</span><span>Estado del tratamiento</span><span>Última visita</span><span>Próxima cita</span><span>Seguimiento</span></div>{filtered.map((patient: Patient) => <button className="directory-row" key={patient.id} onClick={() => setSelectedPatient(patient)}><span className="patient-cell"><Avatar patient={patient} /><strong>{patient.name}</strong></span><span>{patient.treatment}</span><span><div className="mini-progress"><i style={{ width: `${patient.progress}%` }} /></div>{patient.progress}% en curso</span><span>{patient.lastVisit}</span><span>{patient.nextAppointment}</span><span><StatusBadge status={patient.status} /></span></button>)}</div></section></> }
+function ReportsView({ patients, appointments }: { patients: Patient[]; appointments: Appointment[] }) { const attended = appointments.filter(a => a.status === 'Asistió').length; const noShow = appointments.filter(a => a.status === 'No asistió').length; const risk = patients.filter(p => p.priority === 'Alta').length; const dist = appointmentStatuses.map(status => ({ status, value: appointments.filter(a => a.status === status).length })); return <><ViewHeading eyebrow="Resumen del consultorio" title="Reportes" description="Una lectura rápida de la operación de seguimiento." /><div className="metrics-grid report-metrics"><MetricCard icon={<CalendarDays size={18} />} label="Total de citas" value={appointments.length} helper="agenda registrada" tone="teal" /><MetricCard icon={<CheckCircle2 size={18} />} label="Tasa de asistencia" value={`${appointments.length ? Math.round(attended / appointments.length * 100) : 0}%`} helper="citas con asistencia" tone="green" /><MetricCard icon={<X size={18} />} label="Tasa de inasistencia" value={`${appointments.length ? Math.round(noShow / appointments.length * 100) : 0}%`} helper="requieren seguimiento" tone="red" /><MetricCard icon={<HeartPulse size={18} />} label="En riesgo" value={risk} helper="tratamientos a vigilar" tone="amber" /></div><div className="report-grid"><section className="workspace-card chart-card"><h2>Estado de citas</h2><p>Distribución de la agenda actual</p><div className="bar-list">{dist.map(item => <div className="bar-item" key={item.status}><span>{item.status}</span><div><i style={{ width: `${Math.max(item.value / Math.max(appointments.length, 1) * 100, item.value ? 8 : 0)}%` }} /></div><strong>{item.value}</strong></div>)}</div></section><section className="workspace-card chart-card"><h2>Seguimiento de pacientes</h2><p>Estado de las conversaciones</p><div className="donut-summary"><div className="donut" style={{ '--value': `${patients.filter(p => p.status === 'Resuelto').length / patients.length * 100}%` } as React.CSSProperties}><strong>{patients.filter(p => p.status === 'Resuelto').length}</strong><span>resueltos</span></div><div className="legend-list"><span><i className="legend teal" />Pendiente <b>{patients.filter(p => p.status === 'Pendiente').length}</b></span><span><i className="legend amber" />Contactado <b>{patients.filter(p => p.status === 'Contactado').length}</b></span><span><i className="legend green" />Resuelto <b>{patients.filter(p => p.status === 'Resuelto').length}</b></span></div></div></section><section className="workspace-card chart-card full-chart"><h2>Pacientes en riesgo por tratamiento</h2><p>Prioridad alta que necesita una acción de Mariana</p><div className="risk-chips">{patients.filter(p => p.priority === 'Alta').map(p => <div key={p.id}><span className="risk-icon">!</span><span><strong>{p.treatment}</strong><small>{p.name}</small></span><PriorityBadge priority={p.priority} /></div>)}</div></section></div><div className="recovered-note"><CheckCircle2 size={16} /> <strong>{patients.filter(p => p.status === 'Resuelto').length} pacientes recuperados</strong><span>después de una acción de seguimiento</span></div></> }
+function SettingsView({ settings, setSettings, saved, setSaved }: any) { function update(key: string, value: string) { setSettings((current: any) => ({ ...current, [key]: value })); setSaved(false) } return <><ViewHeading eyebrow="Preferencias del consultorio" title="Configuración" description="Ajusta las reglas que ayudan a Mariana a trabajar cada día." /><section className="settings-grid"><div className="workspace-card settings-card"><div className="settings-title"><div className="metric-icon teal"><Clock3 size={18} /></div><div><h2>Reglas de seguimiento</h2><p>Define cuándo un paciente necesita atención prioritaria.</p></div></div><label className="field-label">Días sin cita para considerar en riesgo<input type="number" min="1" value={settings.days} onChange={(e) => update('days', e.target.value)} /><small>Actualmente: más de {settings.days} días sin una nueva cita.</small></label></div><div className="workspace-card settings-card"><div className="settings-title"><div className="metric-icon teal"><MessageCircle size={18} /></div><div><h2>Mensajes de WhatsApp</h2><p>Textos predeterminados para tus conversaciones.</p></div></div><label className="field-label">Mensaje de recordatorio<textarea value={settings.reminder} onChange={(e) => update('reminder', e.target.value)} /></label><label className="field-label">Mensaje de seguimiento<textarea value={settings.followup} onChange={(e) => update('followup', e.target.value)} /></label></div><div className="workspace-card settings-card"><div className="settings-title"><div className="metric-icon teal"><Stethoscope size={18} /></div><div><h2>Clínica</h2><p>Información visible en el panel de trabajo.</p></div></div><label className="field-label">Nombre de la clínica<input value={settings.clinic} onChange={(e) => update('clinic', e.target.value)} /></label></div></section><button className="save-button" onClick={() => setSaved(true)}><Save size={16} />{saved ? 'Cambios guardados' : 'Guardar configuración'}</button></> }
